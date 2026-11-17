@@ -11,6 +11,20 @@ Center Common supplies shared infrastructure for ConfigCenter, AuthCenter and Ce
 | `config/`          | Go lint settings and consumer Make targets                                                   |
 | `.github/actions/` | Shared setup, checks and build workflows                                                     |
 
+## Client navigation and state
+
+`ui/application.ts` creates a Vue application with isolated Vue Router and Pinia instances. Consumers pass their route records, initial page payload, loader, error reporter and document-title callback; the returned `pinia` and `usePageStore` provide application-scoped state.
+
+`NavigationLink` uses client navigation for registered internal routes and keeps native links for server-owned routes marked `meta.document`. Keep login, OAuth, language changes and server-rendered documentation on document navigation, including links leaving a documentation page.
+
+Navigation loads JSON from the existing authorized page URL using `X-Center-Navigation: 1`. Call `httpui.ServePageData` after authorization and payload encoding to return `{ title, data }`; ordinary requests still render the HTML shell, and the development proxy forwards the navigation header.
+
+Keep the initial document's CSP nonce when adapting new page data, while accepting the fresh CSRF token and permissions from the server. The shared Pinia store is memory-only, holds the current page snapshot and pending state, and does not persist credentials or cache business data.
+
+Pending navigation preserves the current view and shows a progress indicator. A later navigation cancels its predecessor; failed requests leave the current page intact, while redirects and non-success HTTP responses return control to the server through a document navigation.
+
+Route commits remount the consumer page component, focus the application content and update the title through the supplied callback. Vue Router owns browser history and scroll restoration, while consumer components retain their existing lifecycle cleanup.
+
 ## Local integration
 
 Keep the four repositories beside each other. In a consumer, run:

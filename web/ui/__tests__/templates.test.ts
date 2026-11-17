@@ -6,6 +6,23 @@ import { checkDangerTemplate } from '../../../tools/oxlint/danger.ts'
 import { checkDropdownStyles } from '../../../tools/oxlint/dropdown.ts'
 import { checkIconLabels } from '../../../tools/oxlint/icon-labels.ts'
 
+it.each(['NavigationLink', 'navigation-link', 'RouterLink', 'router-link'])(
+  'keeps link accessibility and icon label rules for %s',
+  (component) => {
+    expect(checkTemplate(`<${component} href="/projects" />`)).toContain('unnamed-control')
+    expect(
+      checkTemplate(`<${component} href="/projects" target="_blank">Projects</${component}>`),
+    ).toContain('unsafe-link')
+    expect(
+      checkIconLabels(
+        `<${component} href="/projects"><i class="ri-key-line" />A very long navigation label</${component}>`,
+        '',
+        { en: {} },
+      ),
+    ).toContain('icon-button-label-too-long:en:A very long navigation label')
+  },
+)
+
 describe('shared components obey the consumer UI contracts', () => {
   for (const file of readdirSync('ui').filter((name) => name.endsWith('.vue'))) {
     it(file, () => {

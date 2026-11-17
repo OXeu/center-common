@@ -10,7 +10,15 @@ for (const [name, version] of Object.entries(common.devDependencies)) {
   if (requested !== undefined && requested !== version)
     throw new Error(`${name}: use the common toolchain version ${version}, found ${requested}`)
 }
-for (const name of ['vue', 'vite-plus', 'tailwindcss', 'typescript', 'vue-tsc']) {
+for (const name of [
+  'vue',
+  'vue-router',
+  'pinia',
+  'vite-plus',
+  'tailwindcss',
+  'typescript',
+  'vue-tsc',
+]) {
   const version = (root: string) =>
     (
       JSON.parse(readFileSync(resolve(root, 'node_modules', name, 'package.json'), 'utf8')) as {

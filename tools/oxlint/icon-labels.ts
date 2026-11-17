@@ -1,6 +1,8 @@
 import { parse } from '@vue/compiler-dom'
 import ts from 'typescript'
 
+const controls = ['button', 'a', 'NavigationLink', 'navigation-link', 'RouterLink', 'router-link']
+
 function hidden(node: any): boolean {
   return (
     node.type === 1 &&
@@ -78,7 +80,7 @@ export function checkIconLabels(
       : null
   }
   function texts(node: any, messages: Record<string, string>): string[] | null {
-    if (hidden(node) || (icon(node) && !['button', 'a'].includes(node.tag))) return ['']
+    if (hidden(node) || (icon(node) && !controls.includes(node.tag))) return ['']
     if (node.type === 2) return [node.content]
     if (node.type === 5) return expression(node.content.content, messages)
     let values = ['']
@@ -94,11 +96,11 @@ export function checkIconLabels(
       const marked = node.props.some(
         (p: any) => p.name === 'data-icon-button' || p.name === 'icon' || p.arg?.content === 'icon',
       )
-      const control = ['button', 'a'].includes(node.tag) || /button$/iu.test(node.tag)
+      const control = controls.includes(node.tag) || /button$/iu.test(node.tag)
       if ((control && hasIcon(node)) || marked || /^icon-?button$/iu.test(node.tag)) {
         for (const [lang, messages] of Object.entries(catalogs)) {
           const label =
-            !['button', 'a'].includes(node.tag) &&
+            !controls.includes(node.tag) &&
             node.props.find((p: any) => p.name === 'label' || p.arg?.content === 'label')
           const values = label
             ? label.type === 6

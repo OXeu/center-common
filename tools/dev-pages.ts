@@ -20,6 +20,8 @@ async function serve(
       headers: {
         cookie: req.headers.cookie ?? '',
         'accept-language': req.headers['accept-language'] ?? '',
+        ...(req.headers.accept ? { accept: req.headers.accept } : {}),
+        ...(req.headers['x-center-navigation'] === '1' ? { 'x-center-navigation': '1' } : {}),
       },
     })
     res.statusCode = response.status

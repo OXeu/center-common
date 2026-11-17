@@ -12,7 +12,7 @@ export function centerConfig(options: DevPagesOptions) {
     cacheDir: '.tmp/vite',
     resolve: {
       alias: { '@oxeu/center-common': resolve('.tmp/common') },
-      dedupe: ['vue', '@yusufceng1z/ding'],
+      dedupe: ['vue', 'vue-router', 'pinia', '@yusufceng1z/ding'],
       preserveSymlinks: true,
     },
     server: {
