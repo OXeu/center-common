@@ -4,7 +4,7 @@ import { extname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse } from '@vue/compiler-sfc'
 
-export function checkScripts(root: string): string[] {
+export function checkFiles(root: string): string[] {
   const files = execFileSync(
     'git',
     ['ls-files', '--cached', '--others', '--exclude-standard', '--deduplicate', '-z'],
@@ -17,6 +17,16 @@ export function checkScripts(root: string): string[] {
     const path = resolve(root, filename)
     if (!lstatSync(path, { throwIfNoEntry: false })) continue
     const extension = extname(filename).toLowerCase()
+    if (
+      /^\.(?:md|mdx|markdown|mdown|mkd|txt|text|rst|adoc|asciidoc)$/u.test(extension) &&
+      !['README.md', 'AGENTS.md'].includes(filename) &&
+      !filename.startsWith('docs/') &&
+      !filename.startsWith('.github/')
+    ) {
+      errors.push(
+        `${filename}: no-restricted-files: keep maintained documentation in docs/ and temporary notes in .tmp/; only README.md and AGENTS.md are allowed at the root`,
+      )
+    }
     if (/^\.(?:[cm]?js|jsx|[cm]ts|tsx)$/u.test(extension)) {
       errors.push(`${filename}: scripts-use-typescript: use .ts instead of ${extension}`)
     } else if (extension === '.vue') {
@@ -39,7 +49,7 @@ export function checkScripts(root: string): string[] {
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const errors = checkScripts(process.cwd())
+  const errors = checkFiles(process.cwd())
   if (errors.length) {
     process.stderr.write(errors.join('\n') + '\n')
     process.exitCode = 1

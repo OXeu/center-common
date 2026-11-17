@@ -57,7 +57,9 @@ CI=true make check build
 
 `tools/common.ts` 是消费者启动 common 前唯一需要保留的引导程序，来源为本仓库 `tools/bootstrap.ts`。变更引导协议时同步它们；CI 比较二者，防止悄悄产生不同实现。
 
-JavaScript/TypeScript 脚本统一使用 `.ts`，Vue 的每个脚本块必须声明 `lang="ts"`。`npm run lint` 先运行共享的 `tools/lint-scripts.ts`，扫描全仓已跟踪文件和未被 Git 忽略的新文件，禁止 `.js`、`.jsx`、`.cjs`、`.mjs`、`.mts`、`.cts` 和 `.tsx`，包括隐藏目录、测试和配置文件。被忽略的依赖与 `.tmp/` 构建产物不参与检查。消费者的 lint 命令以 `node .tmp/common/tools/lint-scripts.ts` 开始。
+JavaScript/TypeScript 脚本统一使用 `.ts`，Vue 的每个脚本块必须声明 `lang="ts"`。`npm run lint` 先运行共享的 `tools/lint-files.ts`，扫描全仓已跟踪文件和未被 Git 忽略的新文件，禁止 `.js`、`.jsx`、`.cjs`、`.mjs`、`.mts`、`.cts` 和 `.tsx`，包括隐藏目录、测试和配置文件。被忽略的依赖与 `.tmp/` 构建产物不参与检查。消费者的 lint 命令以 `node .tmp/common/tools/lint-files.ts` 开始。
+
+`no-restricted-files` 按文件路径约束说明文档：根目录仅允许 `README.md`、`AGENTS.md`，正式文档集中在顶层 `docs/`，GitHub 管理文档保留在 `.github/`。其他位置的 `.md`、`.mdx`、`.markdown`、`.mdown`、`.mkd`、`.txt`、`.text`、`.rst`、`.adoc`、`.asciidoc` 文件（扩展名不区分大小写）都会使 lint 失败，包含源码目录里的 README 和嵌套 `docs/`。实现总结、修改说明、排查报告等临时文档应留在对话中或被忽略的 `.tmp/`，不要随手加入仓库。规则不判断作者是否为 AI，也不读取文档内容。
 
 所有生成物位于 `.tmp/`，依赖安装位于 `node_modules/`。保留 `.tmp/common*`、`.tmp/ui`、`.tmp/docs` 和构建二进制供后续构建使用；测试临时目录自动清理。
 

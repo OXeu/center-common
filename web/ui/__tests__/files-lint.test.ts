@@ -2,7 +2,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
-import { checkScripts } from '../../../tools/lint-scripts.ts'
+import { checkFiles } from '../../../tools/lint-files.ts'
 
 let root: string
 
@@ -18,7 +18,7 @@ function git(...args: string[]) {
 
 beforeEach(() => {
   mkdirSync('.tmp', { recursive: true })
-  root = mkdtempSync(resolve('.tmp/scripts-lint-'))
+  root = mkdtempSync(resolve('.tmp/files-lint-'))
   git('init', '--quiet')
   write('.gitignore', 'node_modules/\n.tmp/\n')
 })
@@ -32,7 +32,7 @@ describe('repository script rules', () => {
       write(`.github/tracked.${extension}`)
       git('add', '.github')
       write(`nested/new script.${extension}`)
-      expect(checkScripts(root)).toEqual([
+      expect(checkFiles(root)).toEqual([
         expect.stringContaining(`nested/new script.${extension}: scripts-use-typescript`),
         expect.stringContaining(`.github/tracked.${extension}: scripts-use-typescript`),
       ])
@@ -46,13 +46,13 @@ describe('repository script rules', () => {
     write('deleted.mjs')
     git('add', 'deleted.mjs')
     rmSync(join(root, 'deleted.mjs'))
-    expect(checkScripts(root)).toEqual([])
+    expect(checkFiles(root)).toEqual([])
   })
 
   it('rejects forbidden tracked files even when their directory is ignored', () => {
     write('.tmp/tracked.mjs')
     git('add', '--force', '.tmp/tracked.mjs')
-    expect(checkScripts(root)).toEqual([expect.stringContaining('.tmp/tracked.mjs:')])
+    expect(checkFiles(root)).toEqual([expect.stringContaining('.tmp/tracked.mjs:')])
   })
 
   it.each([
@@ -65,7 +65,7 @@ describe('repository script rules', () => {
     '<script>export default {}</script><script setup lang="ts">const value = 1</script>',
   ])('rejects non-TypeScript Vue scripts: %s', (source) => {
     write('Component.vue', source + '<template><div /></template>')
-    expect(checkScripts(root)).toContainEqual(expect.stringContaining('scripts-use-typescript'))
+    expect(checkFiles(root)).toContainEqual(expect.stringContaining('scripts-use-typescript'))
   })
 
   it.each([
@@ -77,21 +77,103 @@ describe('repository script rules', () => {
     '<!-- <script lang="js">export default {}</script> -->',
   ])('allows TypeScript Vue scripts and template-only components: %s', (source) => {
     write('Component.vue', source + '<template><div /></template>')
-    expect(checkScripts(root)).toEqual([])
+    expect(checkFiles(root)).toEqual([])
   })
 
-  it('runs through the consumer common symlink and reports the offending path', () => {
+  it.each([
+    ['scripts/legacy.mjs', 'scripts-use-typescript'],
+    ['IMPLEMENTATION_SUMMARY.md', 'no-restricted-files'],
+    ['web/ui/src/EXPLANATION.md', 'no-restricted-files'],
+  ])('runs through the consumer common symlink and rejects %s', (filename, rule) => {
     mkdirSync(join(root, '.tmp'))
     symlinkSync(resolve('.'), join(root, '.tmp/common'), 'dir')
     const run = () =>
-      spawnSync(process.execPath, ['.tmp/common/tools/lint-scripts.ts'], {
+      spawnSync(process.execPath, ['.tmp/common/tools/lint-files.ts'], {
         cwd: root,
         encoding: 'utf8',
       })
     expect(run().status).toBe(0)
-    write('scripts/legacy.mjs')
+    write(filename)
     const result = run()
     expect(result.status).toBe(1)
-    expect(result.stderr).toContain('scripts/legacy.mjs: scripts-use-typescript')
+    expect(result.stderr).toContain(`${filename}: ${rule}`)
+  })
+})
+
+describe('no-restricted-files', () => {
+  it.each([
+    'md',
+    'mdx',
+    'markdown',
+    'mdown',
+    'mkd',
+    'txt',
+    'text',
+    'rst',
+    'adoc',
+    'asciidoc',
+    'MD',
+  ])(
+    'rejects tracked root documents and new source documents with the %s extension',
+    (extension) => {
+      const tracked = `IMPLEMENTATION_SUMMARY.${extension}`
+      const untracked = `web/ui/src/实现说明.${extension}`
+      write(tracked)
+      git('add', tracked)
+      write(untracked)
+      expect(checkFiles(root)).toEqual([
+        expect.stringContaining(`${untracked}: no-restricted-files:`),
+        expect.stringContaining(`${tracked}: no-restricted-files:`),
+      ])
+    },
+  )
+
+  it.each([
+    'ui/README.md',
+    'oauth/AGENTS.md',
+    'internal/server/NOTES.md',
+    'sdk/configcenter/EXPLANATION.md',
+    'tools/docs/implementation.md',
+    'docs-old/summary.md',
+    '.github-old/summary.md',
+    '.notes/summary.md',
+    'README_FIX.md',
+    '.summary.md',
+  ])('does not grant documentation exceptions to %s', (filename) => {
+    write(filename)
+    expect(checkFiles(root)).toEqual([expect.stringContaining(`${filename}: no-restricted-files:`)])
+  })
+
+  it('allows maintained documentation and ordinary source files', () => {
+    for (const filename of [
+      'README.md',
+      'AGENTS.md',
+      'docs/api.md',
+      'docs/guide/setup.mdx',
+      '.github/commits.md',
+      '.github/ISSUE_TEMPLATE/bug_report.md',
+      'ui/summary.ts',
+      'oauth/client.go',
+    ]) {
+      write(filename)
+    }
+    expect(checkFiles(root)).toEqual([])
+  })
+
+  it('ignores local scratch documents, dependencies and deleted documents', () => {
+    write('.tmp/summary.md')
+    write('node_modules/example/README.md')
+    write('removed.md')
+    git('add', 'removed.md')
+    rmSync(join(root, 'removed.md'))
+    expect(checkFiles(root)).toEqual([])
+  })
+
+  it('rejects scratch documents forced into Git despite ignore rules', () => {
+    write('.tmp/summary.md')
+    git('add', '--force', '.tmp/summary.md')
+    expect(checkFiles(root)).toEqual([
+      expect.stringContaining('.tmp/summary.md: no-restricted-files:'),
+    ])
   })
 })

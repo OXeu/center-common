@@ -9,7 +9,7 @@
     "./config/*": "./config/*"
   },
   "scripts": {
-    "lint": "node tools/lint-scripts.ts && vp lint",
+    "lint": "node tools/lint-files.ts && vp lint",
     "typecheck": "vue-tsc -p tsconfig.json",
     "test": "vp test",
     "fmt": "vp fmt"
