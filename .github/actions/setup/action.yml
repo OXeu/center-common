@@ -18,5 +18,5 @@ runs:
         mkdir -p .tmp
         echo "TMPDIR=$GITHUB_WORKSPACE/.tmp" >> "$GITHUB_ENV"
         cmp tools/common.mjs .tmp/common/tools/bootstrap.mjs
-        npm ci --prefix .tmp/common
+        (cd .tmp/common && npm ci)
         npm ci
