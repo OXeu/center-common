@@ -1,0 +1,22 @@
+name: Set up a Center project
+description: Install the shared Go and frontend toolchain at the consumer's pinned revision
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
+        cache-dependency-path: |
+          package-lock.json
+          .tmp/common/package-lock.json
+    - shell: bash
+      run: |
+        mkdir -p .tmp
+        echo "TMPDIR=$GITHUB_WORKSPACE/.tmp" >> "$GITHUB_ENV"
+        cmp tools/common.mjs .tmp/common/tools/bootstrap.mjs
+        npm ci --prefix .tmp/common
+        npm ci

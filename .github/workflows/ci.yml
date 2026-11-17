@@ -1,0 +1,26 @@
+name: Check common infrastructure
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      TMPDIR: ${{ github.workspace }}/.tmp
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p .tmp
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
+      - run: make check
