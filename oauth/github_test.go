@@ -79,7 +79,7 @@ func TestGitHubDiscoveryFallbackAndUserinfo(t *testing.T) {
 	meta.UserinfoEndpoint = srv.URL + "/user"
 	c.remember(meta)
 
-	if got := c.scopes(); len(got) != 1 || got[0] != "read:user" {
+	if got := c.scopes(meta); len(got) != 1 || got[0] != "read:user" {
 		t.Fatalf("scopes = %v; GitHub must not receive openid or groups", got)
 	}
 	accessToken, err := c.exchangeCode(context.Background(), meta, "code", "verifier")

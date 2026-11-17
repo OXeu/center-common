@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -36,6 +37,7 @@ type Discovery struct {
 	TokenEndpoint         string   `json:"token_endpoint"`
 	JWKSURI               string   `json:"jwks_uri"`
 	ClaimsSupported       []string `json:"claims_supported"`
+	ScopesSupported       []string `json:"scopes_supported"`
 	UserinfoEndpoint      string   `json:"userinfo_endpoint"`
 }
 
@@ -141,7 +143,10 @@ func (c *Client) begin(ctx context.Context) (redirect, stateBlob string, err err
 	conf := c.oauthConfig(meta)
 	var opts []oauth2.AuthCodeOption
 	if !c.isGitHub() {
-		opts = append(opts, oauth2.SetAuthURLParam("nonce", nonce), oauth2.S256ChallengeOption(verifier))
+		opts = append(opts, oauth2.S256ChallengeOption(verifier))
+		if slices.Contains(conf.Scopes, "openid") {
+			opts = append(opts, oauth2.SetAuthURLParam("nonce", nonce))
+		}
 	}
 	redirect = conf.AuthCodeURL(state, opts...)
 	stateBlob, err = encodeState(blob)
@@ -352,7 +357,7 @@ func (c *Client) oauthConfig(meta Discovery) *oauth2.Config {
 		ClientID:     c.cfg.ClientID,
 		ClientSecret: c.cfg.ClientSecret,
 		RedirectURL:  c.cfg.RedirectURL,
-		Scopes:       c.scopes(),
+		Scopes:       c.scopes(meta),
 		Endpoint:     endpoint,
 	}
 }
@@ -361,7 +366,7 @@ func (c *Client) isGitHub() bool {
 	return strings.EqualFold(issuerHost(c.cfg.IssuerURL), "github.com")
 }
 
-func (c *Client) scopes() []string {
+func (c *Client) scopes(meta Discovery) []string {
 	if c.isGitHub() {
 		// GitHub has no openid scope and fails on unknown ones.
 		seen := map[string]bool{}
@@ -379,6 +384,9 @@ func (c *Client) scopes() []string {
 	out := make([]string, 0, len(c.cfg.Scopes)+1)
 	seen := map[string]bool{}
 	for _, s := range append([]string{"openid"}, c.cfg.Scopes...) {
+		if s == "openid" && meta.ScopesSupported != nil && !slices.Contains(meta.ScopesSupported, s) {
+			continue
+		}
 		if s != "" && !seen[s] {
 			seen[s] = true
 			out = append(out, s)
