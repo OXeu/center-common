@@ -44,12 +44,13 @@ export function checkDangerTemplate(
       const accountSignOut =
         options.accountSignOut &&
         filename === 'web/ui/src/PageHeader.vue' &&
-        node.tag === 'button' &&
+        ['button', 'Button'].includes(node.tag) &&
         attrs['data-danger-action'] === 'signOut'
       if (dangerous && !trusted && !accountSignOut) errors.push('danger-use-shared-actions')
       if (dangerous && (trusted || accountSignOut)) {
         if (!options.button && !inDropdown) errors.push('danger-requires-dropdown')
-        if (!attrs.class?.split(/\s/u).includes('btn-danger')) errors.push('danger-requires-style')
+        if (attrs.variant !== 'danger' && !attrs.class?.split(/\s/u).includes('btn-danger'))
+          errors.push('danger-requires-style')
         if (
           !bindings.some(
             (p: any) =>

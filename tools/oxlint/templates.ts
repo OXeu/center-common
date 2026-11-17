@@ -117,12 +117,19 @@ export function checkTemplate(
           errors.push('raw-dom')
       }
       if (
-        ['button', 'a', 'NavigationLink', 'navigation-link', 'RouterLink', 'router-link'].includes(
-          node.tag,
-        ) &&
+        [
+          'button',
+          'Button',
+          'a',
+          'NavigationLink',
+          'navigation-link',
+          'RouterLink',
+          'router-link',
+        ].includes(node.tag) &&
         !node.children.length &&
         !attrs['aria-label'] &&
-        !node.props.some((p: any) => p.arg?.content === 'aria-label')
+        !attrs['aria-labelledby'] &&
+        !node.props.some((p: any) => ['aria-label', 'aria-labelledby'].includes(p.arg?.content))
       )
         errors.push('unnamed-control')
     }

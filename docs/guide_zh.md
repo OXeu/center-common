@@ -1,5 +1,7 @@
 # Center Common
 
+按钮组件、规格组合和禁止重复实现的规则见[统一按钮](buttons.md)。
+
 configcenter、authcenter 和 certcenter 长期共同维护的基础设施仓库。三个业务仓库保持独立的 Git 历史、数据模型、权限、页面和部署周期；共享实现通过依赖引用，不复制到业务仓库。
 
 | 目录               | 共享能力                                                                    |

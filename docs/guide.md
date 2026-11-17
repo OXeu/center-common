@@ -1,5 +1,7 @@
 # Center Common guide
 
+Button sizes, variants, content modes and enforcement are documented in [Shared buttons](buttons.md).
+
 Center Common supplies shared infrastructure for ConfigCenter, AuthCenter and CertCenter. Each consumer keeps its own Git history, data models, permissions, translations, routes, secrets and deployment lifecycle. Shared APIs receive explicit configuration.
 
 | Directory          | Responsibility                                                                               |

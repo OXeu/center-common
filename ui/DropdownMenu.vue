@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { nextTick, ref, useId } from 'vue'
+import { computed, nextTick, ref, useId } from 'vue'
+import Button from './Button.vue'
 import { useDropdownPosition } from './dropdown.ts'
 const props = defineProps<{ label: string; disabled?: boolean; compact?: boolean }>()
 const open = ref(false)
-const trigger = ref<HTMLButtonElement | null>(null)
+const button = ref<InstanceType<typeof Button> | null>(null)
+const trigger = computed(() => button.value?.element ?? null)
 const panel = ref<HTMLElement | null>(null)
 const position = useDropdownPosition(trigger, panel, open)
 const id = useId()
@@ -29,19 +31,20 @@ function blur(event: FocusEvent) {
 </script>
 <template>
   <div class="dropdown" @click.stop @keydown.esc.stop="escape" @focusout="blur">
-    <button
-      ref="trigger"
+    <Button
+      ref="button"
       type="button"
-      class="btn-ghost"
-      :class="{ 'btn-icon': props.compact }"
+      variant="ghost"
+      :content="props.compact ? 'icon' : 'text'"
       :aria-label="props.label"
       :disabled="props.disabled"
       :aria-expanded="open"
       :aria-controls="id"
       @click="open = !open"
     >
-      <slot name="trigger">{{ props.label }}</slot>
-    </button>
+      <template #icon><slot name="trigger" /></template>
+      {{ props.label }}
+    </Button>
     <div
       v-if="open"
       :id="id"

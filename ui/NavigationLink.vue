@@ -1,8 +1,17 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { RouterLink, routerKey } from 'vue-router'
 
-const props = defineProps<{ href: string }>()
+defineOptions({ inheritAttrs: false })
+const props = defineProps<{ href: string; disabled?: boolean }>()
+const element = ref<HTMLAnchorElement | null>(null)
+const routed = ref<{ $el: HTMLAnchorElement } | null>(null)
+const linkAttributes = computed(() =>
+  props.disabled
+    ? { 'aria-disabled': true as const, tabindex: -1, role: 'link' }
+    : { href: props.href },
+)
+defineExpose({ focus: () => (element.value ?? routed.value?.$el)?.focus() })
 const router = inject(routerKey, undefined)
 const internal = computed(
   () =>
@@ -16,6 +25,8 @@ const internal = computed(
 </script>
 
 <template>
-  <RouterLink v-if="internal" :to="href"><slot /></RouterLink>
-  <a v-else :href="href"><slot /></a>
+  <RouterLink v-if="internal && !disabled" ref="routed" v-bind="$attrs" :to="href"
+    ><slot
+  /></RouterLink>
+  <a v-else ref="element" v-bind="{ ...$attrs, ...linkAttributes }"><slot /></a>
 </template>

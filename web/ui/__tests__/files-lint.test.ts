@@ -212,3 +212,29 @@ describe('Markdown paragraphs', () => {
     expect(run().status).toBe(0)
   })
 })
+
+describe('shared button enforcement', () => {
+  it('rejects tracked and new button implementations from the repository command', () => {
+    writeReadmeFixture(root)
+    mkdirSync(join(root, '.tmp'))
+    symlinkSync(resolve('.'), join(root, '.tmp/common'), 'dir')
+    write('components/Action.vue', '<template><button>Save</button></template>')
+    git('add', 'components/Action.vue')
+    write('ui/custom.css', '.btn { padding: 0; }')
+    const run = () =>
+      spawnSync(process.execPath, ['.tmp/common/tools/lint-files.ts'], {
+        cwd: root,
+        encoding: 'utf8',
+      })
+    const result = run()
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('components/Action.vue:1: button-use-shared:')
+    expect(result.stderr).toContain('ui/custom.css:1: button-no-custom-style:')
+    write(
+      'components/Action.vue',
+      '<script setup lang="ts">import Button from "@oxeu/center-common/ui/Button.vue"</script><template><Button variant="secondary">Save</Button></template>',
+    )
+    rmSync(join(root, 'ui/custom.css'))
+    expect(run().status).toBe(0)
+  })
+})

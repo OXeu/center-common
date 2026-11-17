@@ -6,6 +6,7 @@ import { parse } from '@vue/compiler-sfc'
 import { checkReadmes } from './oxlint/readme.ts'
 import { checkParagraphs } from './oxlint/paragraphs.ts'
 import { paragraphRules } from '../config/markdown.ts'
+import { checkButtons } from './lint-buttons.ts'
 
 export function checkFiles(root: string): string[] {
   const files = execFileSync(
@@ -51,7 +52,7 @@ export function checkFiles(root: string): string[] {
       }
     }
   }
-  return errors
+  return [...errors, ...checkButtons(root, files)]
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
