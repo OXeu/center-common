@@ -4,6 +4,8 @@ import { extname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse } from '@vue/compiler-sfc'
 import { checkReadmes } from './oxlint/readme.ts'
+import { checkParagraphs } from './oxlint/paragraphs.ts'
+import { paragraphRules } from '../config/markdown.ts'
 
 export function checkFiles(root: string): string[] {
   const files = execFileSync(
@@ -18,6 +20,9 @@ export function checkFiles(root: string): string[] {
     const path = resolve(root, filename)
     if (!lstatSync(path, { throwIfNoEntry: false })) continue
     const extension = extname(filename).toLowerCase()
+    if (/^\.(?:md|mdx|markdown|mdown|mkd)$/u.test(extension)) {
+      errors.push(...checkParagraphs(readFileSync(path, 'utf8'), filename, paragraphRules))
+    }
     if (
       /^\.(?:md|mdx|markdown|mdown|mkd|txt|text|rst|adoc|asciidoc)$/u.test(extension) &&
       !['README.md', 'README_zh.md', 'AGENTS.md', 'LICENSE'].includes(filename) &&

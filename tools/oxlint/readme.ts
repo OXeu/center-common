@@ -2,6 +2,7 @@ import MarkdownIt from 'markdown-it'
 import { parseFragment, type DefaultTreeAdapterMap } from 'parse5'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
+import { splitSentences } from './sentences.ts'
 
 type Node = DefaultTreeAdapterMap['node']
 type Element = DefaultTreeAdapterMap['element']
@@ -160,7 +161,7 @@ export function checkReadme(source: string, filename: string, root: string): str
     errors.push('follow the logo with a centered h3 title')
   }
   const summary = text(introduction).trim()
-  const sentences = summary.split(/[.!?]+(?:\s+|$)|[。！？]+/gu).filter((part) => part.trim())
+  const sentences = splitSentences(summary)
   if (
     !element(introduction) ||
     introduction.tagName !== 'p' ||

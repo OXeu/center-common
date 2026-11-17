@@ -19,6 +19,17 @@ describe('README layout', () => {
     expect(checkReadmes(root)).toEqual([])
   })
 
+  it('keeps abbreviations and decimals inside a single introductory sentence', () => {
+    expect(
+      check(
+        readmeFixture().replace(
+          'Shared infrastructure for example applications.',
+          'Tools for Dr. Smith to explore version 3.14.',
+        ),
+      ),
+    ).toEqual([])
+  })
+
   it('requires both language files even when one was deleted', () => {
     rmSync(join(root, 'README_zh.md'))
     expect(checkReadmes(root)).toContainEqual(

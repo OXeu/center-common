@@ -180,3 +180,35 @@ describe('no-restricted-files', () => {
     ])
   })
 })
+
+describe('Markdown paragraphs', () => {
+  it('checks tracked and new Markdown documents with source locations', () => {
+    write('docs/tracked.md', '# Guide\n\nSet the key. Register the callback. Replace the URL.')
+    git('add', 'docs/tracked.md')
+    write('.github/new.MD', `${Array.from({ length: 41 }, () => 'word').join(' ')}.`)
+    expect(checkFiles(root)).toEqual([
+      expect.stringContaining('.github/new.MD:1: paragraph-structure: sentence too long'),
+      expect.stringContaining('docs/tracked.md:3: paragraph-steps-list:'),
+    ])
+  })
+
+  it('fails the consumer lint command for prose steps and accepts the list correction', () => {
+    writeReadmeFixture(root)
+    mkdirSync(join(root, '.tmp'))
+    symlinkSync(resolve('.'), join(root, '.tmp/common'), 'dir')
+    const run = () =>
+      spawnSync(process.execPath, ['.tmp/common/tools/lint-files.ts'], {
+        cwd: root,
+        encoding: 'utf8',
+      })
+    write('docs/setup.md', '# Setup\n\nSet the key. Register the callback. Replace the URL.')
+    const result = run()
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('docs/setup.md:3: paragraph-steps-list:')
+    write(
+      'docs/setup.md',
+      '# Setup\n\n1. Set the key.\n2. Register the callback.\n3. Replace the URL.',
+    )
+    expect(run().status).toBe(0)
+  })
+})

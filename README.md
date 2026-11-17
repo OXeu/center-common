@@ -34,7 +34,11 @@ Shared packages and tooling used by the three independent applications.
 
 ## Quick Start
 
-This repository is a library and build toolchain. Run its checks first, then build a consumer for a running service. Install Git, Make, Node.js 24.15+ with npm, and Go 1.26.10. Git access to this repository is required.
+This repository is a library and build toolchain. A running service also needs a consumer.
+
+1. Install Git, Make, Node.js 24.15+ with npm, and Go 1.26.10.
+2. Ensure Git access to this repository and run the checks below.
+3. Follow **Run a consumer** to build and start a service.
 
 ```sh
 git clone https://github.com/OXeu/center-common.git

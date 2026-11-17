@@ -4,6 +4,8 @@ Every repository must contain English `README.md` and Simplified Chinese `README
 
 每个仓库必须同时提供英文 `README.md` 和简体中文 `README_zh.md`。两份文档均遵循下列顺序，源码或注释中的格式示例不算实际内容。
 
+The [Markdown paragraph rules](markdown-style.md) also apply to both READMEs. 中英文 README 同时遵循[段落长度与步骤列表规则](markdown-style.md)。
+
 1. A centered logo, a centered **h3** project title, then one centered introductory sentence. Use `align="center"` on the individual blocks or a surrounding `div`; use descriptive image alt text. 标题必须为三级标题，介绍为一个段落中的一句话。
 2. Language links to **both** `README.md` and `README_zh.md`. 两份文档都必须包含两个语言链接。
 3. At least two main navigation links, such as documentation, deployment and configuration. 至少两个主要文档或部署导航链接。
