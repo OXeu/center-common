@@ -15,18 +15,14 @@
     "fmt": "vp fmt"
   },
   "devDependencies": {
-    "@shikijs/transformers": "^4.6.0",
     "@tailwindcss/vite": "^4.3.5",
-    "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.11",
     "@vue/test-utils": "^2.6.0",
     "@yusufceng1z/ding": "^0.0.6",
     "jsdom": "^26.1.0",
-    "markdown-it": "^15.0.3",
     "postcss": "^8.5.33",
     "remixicon": "^4.9.1",
-    "shiki": "^4.6.0",
     "tailwindcss": "^4.3.5",
     "typescript": "^6.0.3",
     "typescript-native": "npm:typescript@^7.0.2",
