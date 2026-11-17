@@ -39,7 +39,7 @@ CI=true make check build
 
 该模式从锁定地址拉取指定提交，检出到 `.tmp/common-cache/<SHA>`，再建立 `.tmp/common` 链接。不需要相邻业务仓库，也不需要 npm registry 发布。缓存有修改、版本错误、拉取失败都会中止，不能退回 main 或本地源码。CI 忽略本地联调选择，拒绝 `--local`。
 
-`node tools/common.mjs --locked` 只为当前操作选择锁定源码，不删除本地联调选择；后续普通 `make` 会恢复本地选择。需要完整的可复现发布时，对整个命令设置 `CI=true`。`make scf-package` 自身也强制选择锁定源码。
+`node tools/common.ts --locked` 只为当前操作选择锁定源码，不删除本地联调选择；后续普通 `make` 会恢复本地选择。需要完整的可复现发布时，对整个命令设置 `CI=true`。`make scf-package` 自身也强制选择锁定源码。
 
 部署流水线先拉取 common，再调用其中的 setup/check composite actions；其版本与源码使用同一锁文件。各项目仍保留 MySQL 服务、部署开关、生产环境和业务专属部署步骤。最终 Go 二进制已包含前端资源，生产进程不需要联网拉取 common。
 
@@ -55,7 +55,9 @@ CI=true make check build
 
 回滚只需恢复消费者的锁文件及同次升级的适配改动。破坏性 API 变化必须提供迁移说明；消费者可以停留在旧提交，独立安排升级。建议以 SemVer tag 标注 common 发布，锁文件仍保存实际 SHA。
 
-`tools/common.mjs` 是消费者启动 common 前唯一需要保留的引导程序，来源为本仓库 `tools/bootstrap.mjs`。变更引导协议时同步它们；CI 比较二者，防止悄悄产生不同实现。
+`tools/common.ts` 是消费者启动 common 前唯一需要保留的引导程序，来源为本仓库 `tools/bootstrap.ts`。变更引导协议时同步它们；CI 比较二者，防止悄悄产生不同实现。
+
+JavaScript/TypeScript 脚本统一使用 `.ts`，Vue 的每个脚本块必须声明 `lang="ts"`。`npm run lint` 先运行共享的 `tools/lint-scripts.ts`，扫描全仓已跟踪文件和未被 Git 忽略的新文件，禁止 `.js`、`.jsx`、`.cjs`、`.mjs`、`.mts`、`.cts` 和 `.tsx`，包括隐藏目录、测试和配置文件。被忽略的依赖与 `.tmp/` 构建产物不参与检查。消费者的 lint 命令以 `node .tmp/common/tools/lint-scripts.ts` 开始。
 
 所有生成物位于 `.tmp/`，依赖安装位于 `node_modules/`。保留 `.tmp/common*`、`.tmp/ui`、`.tmp/docs` 和构建二进制供后续构建使用；测试临时目录自动清理。
 

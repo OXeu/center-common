@@ -8,7 +8,6 @@ check:
 	npm run lint
 	npm run typecheck
 	npm test -- --run
-	node --test web/ui/__tests__/bootstrap.test.mjs
 
 fmt:
 	mkdir -p .tmp

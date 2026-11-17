@@ -20,7 +20,7 @@ if (
   !(args.length === 1 && args[0] === '--locked') &&
   !(args.length === 2 && args[0] === '--local')
 ) {
-  throw new Error('Usage: node tools/common.mjs [--locked | --local PATH]')
+  throw new Error('Usage: node tools/common.ts [--locked | --local PATH]')
 }
 const lock = JSON.parse(readFileSync(join(root, 'common.lock.json'), 'utf8'))
 if (
@@ -34,13 +34,14 @@ const scratch = join(root, '.tmp')
 mkdirSync(scratch, { recursive: true })
 const local = join(scratch, 'common-local')
 const active = join(scratch, 'common')
-function link(target, path) {
+const quote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'"
+function link(target: string, path: string) {
   const stat = lstatSync(path, { throwIfNoEntry: false })
   if (stat && !stat.isSymbolicLink()) throw new Error(`Refusing to replace non-symlink: ${path}`)
   if (stat) unlinkSync(path)
   symlinkSync(target, path, 'dir')
 }
-function validate(path) {
+function validate(path: string) {
   const manifest = JSON.parse(readFileSync(join(path, 'package.json'), 'utf8'))
   if (manifest.name !== '@oxeu/center-common' || !existsSync(join(path, 'go.mod'))) {
     throw new Error('Expected a center-common checkout')
@@ -52,21 +53,21 @@ if (args[0] === '--local') {
   validate(target)
   link(target, local)
 }
-let target
+let target: string
 if (args[0] !== '--locked' && !process.env.CI && existsSync(local)) {
   target = realpathSync(local)
   validate(target)
 } else {
   target = join(scratch, 'common-cache', lock.revision)
   mkdirSync(target, { recursive: true })
-  const git = (...command) => {
+  const git = (...command: string[]) => {
     const env = { ...process.env }
-    let credentials
+    let credentials: string | undefined
     try {
       if (
         env.COMMON_REPO_SSH_KEY &&
         command[0] === 'fetch' &&
-        /^https:\/\/github\.com\//u.test(lock.repository)
+        lock.repository.startsWith('https://github.com/')
       ) {
         credentials = mkdtempSync(join(scratch, 'common-ssh-'))
         const key = join(credentials, 'key')
@@ -76,7 +77,6 @@ if (args[0] !== '--locked' && !process.env.CI && existsSync(local)) {
           hosts,
           'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n',
         )
-        const quote = (value) => "'" + value.replaceAll("'", "'\\''") + "'"
         env.GIT_SSH_COMMAND = `ssh -i ${quote(key)} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=${quote(hosts)}`
         command = command.map((value) =>
           value === lock.repository
@@ -84,7 +84,7 @@ if (args[0] !== '--locked' && !process.env.CI && existsSync(local)) {
             : value,
         )
       }
-      if (env.COMMON_REPO_TOKEN && /^https:\/\/github\.com\//u.test(lock.repository)) {
+      if (env.COMMON_REPO_TOKEN && lock.repository.startsWith('https://github.com/')) {
         const index = Number(env.GIT_CONFIG_COUNT ?? 0)
         env.GIT_CONFIG_COUNT = String(index + 2)
         env[`GIT_CONFIG_KEY_${index}`] = 'http.https://github.com/.extraheader'

@@ -1,18 +1,26 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { join, resolve } from 'node:path'
-import { after, test } from 'node:test'
+import { afterAll, test } from 'vite-plus/test'
 import assert from 'node:assert/strict'
 
 mkdirSync('.tmp', { recursive: true })
 const scratch = mkdtempSync(resolve('.tmp/bootstrap-test-'))
 const remote = join(scratch, 'source')
 const consumer = join(scratch, 'consumer')
-const bootstrap = resolve('tools/bootstrap.mjs')
-after(() => rmSync(scratch, { recursive: true, force: true }))
+const bootstrap = resolve('tools/bootstrap.ts')
+afterAll(() => rmSync(scratch, { recursive: true, force: true }))
 mkdirSync(remote)
 mkdirSync(consumer)
-function git(...args) {
+function git(...args: string[]) {
   return execFileSync('git', ['-C', remote, ...args], { encoding: 'utf8' }).trim()
 }
 git('init', '--quiet')
@@ -32,7 +40,7 @@ function lock(sha = revision) {
   )
 }
 lock()
-function run(args = [], ci = '') {
+function run(args: string[] = [], ci = '') {
   return spawnSync(process.execPath, [bootstrap, ...args], {
     cwd: consumer,
     encoding: 'utf8',
@@ -77,7 +85,7 @@ test('rejects floating revisions, missing commits and unknown options', () => {
 })
 
 test('does not replace an unrelated directory', () => {
-  rmSync(active)
+  unlinkSync(active)
   mkdirSync(active)
   writeFileSync(join(active, 'keep'), 'user data')
   assert.notEqual(run(['--locked']).status, 0)
