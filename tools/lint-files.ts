@@ -3,6 +3,7 @@ import { lstatSync, readFileSync, realpathSync } from 'node:fs'
 import { extname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse } from '@vue/compiler-sfc'
+import { checkReadmes } from './oxlint/readme.ts'
 
 export function checkFiles(root: string): string[] {
   const files = execFileSync(
@@ -19,12 +20,12 @@ export function checkFiles(root: string): string[] {
     const extension = extname(filename).toLowerCase()
     if (
       /^\.(?:md|mdx|markdown|mdown|mkd|txt|text|rst|adoc|asciidoc)$/u.test(extension) &&
-      !['README.md', 'AGENTS.md'].includes(filename) &&
+      !['README.md', 'README_zh.md', 'AGENTS.md', 'LICENSE'].includes(filename) &&
       !filename.startsWith('docs/') &&
       !filename.startsWith('.github/')
     ) {
       errors.push(
-        `${filename}: no-restricted-files: keep maintained documentation in docs/ and temporary notes in .tmp/; only README.md and AGENTS.md are allowed at the root`,
+        `${filename}: no-restricted-files: keep maintained documentation in docs/ and temporary notes in .tmp/; only README.md, README_zh.md, AGENTS.md and LICENSE are allowed at the root`,
       )
     }
     if (/^\.(?:[cm]?js|jsx|[cm]ts|tsx)$/u.test(extension)) {
@@ -49,7 +50,7 @@ export function checkFiles(root: string): string[] {
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const errors = checkFiles(process.cwd())
+  const errors = [...checkFiles(process.cwd()), ...checkReadmes(process.cwd())]
   if (errors.length) {
     process.stderr.write(errors.join('\n') + '\n')
     process.exitCode = 1

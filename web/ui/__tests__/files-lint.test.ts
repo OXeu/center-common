@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { dirname, join, resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
 import { checkFiles } from '../../../tools/lint-files.ts'
+import { writeReadmeFixture } from './readme-fixture.ts'
 
 let root: string
 
@@ -85,6 +86,7 @@ describe('repository script rules', () => {
     ['IMPLEMENTATION_SUMMARY.md', 'no-restricted-files'],
     ['web/ui/src/EXPLANATION.md', 'no-restricted-files'],
   ])('runs through the consumer common symlink and rejects %s', (filename, rule) => {
+    writeReadmeFixture(root)
     mkdirSync(join(root, '.tmp'))
     symlinkSync(resolve('.'), join(root, '.tmp/common'), 'dir')
     const run = () =>
@@ -147,6 +149,7 @@ describe('no-restricted-files', () => {
   it('allows maintained documentation and ordinary source files', () => {
     for (const filename of [
       'README.md',
+      'README_zh.md',
       'AGENTS.md',
       'docs/api.md',
       'docs/guide/setup.mdx',

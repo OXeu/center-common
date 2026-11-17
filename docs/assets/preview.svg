@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="title description">
+  <title id="title">Center Common shared infrastructure</title>
+  <desc id="description">ConfigCenter, AuthCenter and CertCenter consume shared Go packages, Vue controls and development tooling through pinned revisions.</desc>
+  <rect width="1200" height="440" rx="16" fill="#fafafa"/>
+  <g font-family="system-ui, sans-serif" fill="#27272a">
+    <text x="64" y="63" font-size="25" font-weight="700">One implementation. Three independent applications.</text>
+    <text x="64" y="95" font-size="16" fill="#71717a">Explicit configuration · local linking · pinned revisions</text>
+    <rect x="64" y="141" width="420" height="239" rx="12" fill="white" stroke="#d4d4d8"/>
+    <text x="91" y="183" font-size="22" font-weight="700">center-common</text>
+    <path d="M91 204H457" stroke="#e4e4e7"/>
+    <text x="91" y="240" font-size="16">Go: OAuth / OIDC · HTTP assets</text>
+    <text x="91" y="280" font-size="16">Vue: checkboxes · dropdowns · themes</text>
+    <text x="91" y="320" font-size="16">Tooling: Vite · lint · build · CI</text>
+    <text x="91" y="353" font-size="13" fill="#71717a">Business policies stay in each consumer.</text>
+    <g stroke="#a1a1aa" stroke-width="2" fill="none">
+      <path d="M484 260H605M605 174V346M605 174H690M605 260H690M605 346H690"/>
+      <path d="m681 168 9 6-9 6m0 74 9 6-9 6m0 74 9 6-9 6"/>
+    </g>
+    <g fill="white" stroke="#d4d4d8">
+      <rect x="700" y="141" width="436" height="66" rx="10"/>
+      <rect x="700" y="227" width="436" height="66" rx="10"/>
+      <rect x="700" y="313" width="436" height="66" rx="10"/>
+    </g>
+    <g font-size="19" font-weight="650">
+      <text x="726" y="182">ConfigCenter</text>
+      <text x="726" y="268">AuthCenter</text>
+      <text x="726" y="354">CertCenter</text>
+    </g>
+    <g font-size="14" fill="#71717a">
+      <text x="917" y="181">Configuration</text>
+      <text x="917" y="267">Authorization</text>
+      <text x="917" y="353">Certificates</text>
+    </g>
+  </g>
+</svg>
