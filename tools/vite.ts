@@ -4,10 +4,11 @@ import tailwind from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite-plus'
 import { resolve } from 'node:path'
+import { architectureGuard } from './lint-architecture.ts'
 
 export function centerConfig(options: DevPagesOptions) {
   return defineConfig(({ command }) => ({
-    plugins: [iconSprite(), vue(), tailwind(), devPages(options)],
+    plugins: [architectureGuard(), iconSprite(), vue(), tailwind(), devPages(options)],
     base: command === 'build' ? '/static/app/' : '/',
     cacheDir: '.tmp/vite',
     resolve: {
@@ -36,6 +37,7 @@ export function centerConfig(options: DevPagesOptions) {
     },
     test: {
       environment: 'jsdom',
+      setupFiles: ['.tmp/common/tools/test-setup.ts'],
       include: ['web/ui/__tests__/**/*.test.ts', 'tools/oxlint/**/*.test.ts'],
       testTimeout: 15000,
     },

@@ -29,6 +29,18 @@ configcenter、authcenter 和 certcenter 长期共同维护的基础设施仓库
 
 导航成功后重新挂载消费者页面组件，将焦点移到应用内容，并通过传入的回调更新标题。Vue Router 管理浏览器历史和滚动恢复，消费者组件继续执行现有的生命周期清理。
 
+## 导航与状态的强制规则
+
+`npm run lint` 检查依赖声明、实际挂载的启动器、TypeScript 绑定和 Vue 模板。共享 Vite 配置在启动、生产构建和热更新时执行同一套架构检查。
+
+- 直接声明 Vue Router 与 Pinia，并创建、等待和挂载同一个 `createPageApplication` 实例。
+- 使用 `NavigationLink`、`RouterLink` 和 Router 导航方法。禁止原生链接、原生 history、浏览器地址写入、meta refresh 和原生表单跳转；应用表单使用 `@submit.prevent`。
+- 共享响应式状态必须放进 Pinia。禁止模块级 Vue 响应式单例、可变状态导出、响应式 provide/inject 替代 store，以及其他状态管理库；允许组件局部状态、局部表单工厂和显式只读配置。
+- 浏览器持久化由 Pinia store 管理，共享主题适配器保留范围明确的偏好存储边界。
+- 身份认证交接使用 `navigateDocument(url, reason)`，并在消费者的 `tools/navigation-policy.json` 中逐文件声明。每项限定固定目标或服务端 `.redirect`，通配路径、缺失原因和未使用的例外均报错。
+
+检查器通过 TypeScript AST 解析常规导入别名和局部别名。这些规则约束受支持的源码写法，不作为防御刻意混淆 JavaScript 的安全边界。
+
 ## 本地联动
 
 四个仓库放在同一级目录。进入每个业务仓库执行一次：

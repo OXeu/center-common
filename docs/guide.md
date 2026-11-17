@@ -27,6 +27,18 @@ Pending navigation preserves the current view and shows a progress indicator. A 
 
 Route commits remount the consumer page component, focus the application content and update the title through the supplied callback. Vue Router owns browser history and scroll restoration, while consumer components retain their existing lifecycle cleanup.
 
+## Enforced navigation and state
+
+`npm run lint` checks application dependencies, the mounted bootstrap, TypeScript bindings and Vue templates. The shared Vite configuration runs the same architecture checks during startup, production builds and hot updates.
+
+- Declare Vue Router and Pinia directly, and create, await and mount the same `createPageApplication` instance.
+- Use `NavigationLink`, `RouterLink` and Router actions. Raw anchors, native history, browser-location writes, meta refresh and native form submission are rejected; application forms use `@submit.prevent`.
+- Put shared reactive state in Pinia. Module-level Vue reactivity, mutable state exports, reactive provide/inject substitutes and alternative state libraries are rejected; setup-local state, local form factories and explicitly readonly configuration remain valid.
+- Keep browser persistence inside Pinia stores. The shared theme adapter retains its narrowly scoped preference-storage boundary.
+- Authentication handoffs use `navigateDocument(url, reason)` and exact entries in each consumer's `tools/navigation-policy.json`. Each entry specifies a fixed target or a server-provided `.redirect`; wildcard paths, missing reasons and unused exceptions fail lint.
+
+The checker resolves ordinary imported and local aliases using the TypeScript AST. These rules enforce the supported source patterns; they are not a security boundary against deliberately obfuscated JavaScript.
+
 ## Local integration
 
 Keep the four repositories beside each other. In a consumer, run:
