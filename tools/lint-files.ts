@@ -8,6 +8,7 @@ import { checkParagraphs } from './oxlint/paragraphs.ts'
 import { paragraphRules } from '../config/markdown.ts'
 import { checkArchitecture } from './lint-architecture.ts'
 import { checkButtons } from './lint-buttons.ts'
+import { checkDialogs } from './lint-dialogs.ts'
 
 export function checkFiles(root: string): string[] {
   const files = execFileSync(
@@ -53,7 +54,12 @@ export function checkFiles(root: string): string[] {
       }
     }
   }
-  return [...errors, ...checkArchitecture(root, files), ...checkButtons(root, files)]
+  return [
+    ...errors,
+    ...checkArchitecture(root, files),
+    ...checkButtons(root, files),
+    ...checkDialogs(root, files),
+  ]
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {

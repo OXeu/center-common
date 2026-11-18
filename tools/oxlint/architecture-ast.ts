@@ -162,5 +162,5 @@ export function scriptModel(text: string, filename: string) {
     }
     return false
   }
-  return { source, syntax, origin, moduleScope, insideStore }
+  return { source, checker, syntax, origin, moduleScope, insideStore }
 }

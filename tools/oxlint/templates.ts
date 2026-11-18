@@ -1,12 +1,13 @@
 import { parse } from '@vue/compiler-dom'
 import { overridesDropdownPosition } from './dropdown.ts'
+import { checkDialogTemplate } from './dialog-template.ts'
 
 export function checkTemplate(
   source: string,
   filename = '',
   feedback: (expression: string, field: boolean) => boolean = () => false,
 ): string[] {
-  const errors: string[] = []
+  const errors: string[] = checkDialogTemplate(source)
   const emoji = /\p{Extended_Pictographic}/u
   /** @param {any} node @param {boolean} dialog */
   function walk(node: any, dialog: boolean = false, field: boolean = false) {

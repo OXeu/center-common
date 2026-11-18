@@ -238,3 +238,31 @@ describe('shared button enforcement', () => {
     expect(run().status).toBe(0)
   })
 })
+
+describe('single-dropdown dialog enforcement', () => {
+  it('checks templates and dynamic fields through the consumer lint entry point', () => {
+    writeReadmeFixture(root)
+    mkdirSync(join(root, '.tmp'))
+    symlinkSync(resolve('.'), join(root, '.tmp/common'), 'dir')
+    write('web/ui/src/Environment.vue', '<template><dialog><DropdownSelect /></dialog></template>')
+    write(
+      'web/ui/src/workspace.ts',
+      'const form = createForm(page); form.show(title, [{ options }], {}, submit)',
+    )
+    const run = () =>
+      spawnSync(process.execPath, ['.tmp/common/tools/lint-files.ts'], {
+        cwd: root,
+        encoding: 'utf8',
+      })
+    const result = run()
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('web/ui/src/Environment.vue: no-single-dropdown-dialog')
+    expect(result.stderr).toContain('web/ui/src/workspace.ts:1: no-single-dropdown-dialog')
+    write('web/ui/src/Environment.vue', '<template><DropdownMenu label="Environment" /></template>')
+    write(
+      'web/ui/src/workspace.ts',
+      'const form = createForm(page); form.show(title, [{ key: "name" }, { options }], {}, submit)',
+    )
+    expect(run().status).toBe(0)
+  })
+})

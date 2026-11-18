@@ -6,6 +6,7 @@ This repository contains shared infrastructure for configcenter, authcenter and 
 - Never copy shared implementations back into consumers. Test changes against all three projects with local linking, then advance their common.lock.json revisions deliberately.
 - Put every build, test and scratch artifact under the repository root `.tmp/`; never use `/tmp`. Set TMPDIR before Go commands. Keep node_modules and build caches ignored.
 - Use Vue 3 script setup, native dialog focus behavior, shared dropdowns and checkbox components. Preserve keyboard behavior and CSP handling.
+- Reject dialogs that only wrap a single dropdown. Use a direct dropdown for the choice, with a separate confirmation dialog when needed. Enforce this in templates and statically defined form fields.
 - Require `createPageApplication`, Vue Router navigation and Pinia shared state. Consumer document handoffs must be declared in `tools/navigation-policy.json`; component-local state and readonly configuration remain allowed.
 - Use `.ts` for JavaScript/TypeScript scripts and `lang="ts"` for every Vue script block. Repository lint rejects other script extensions, including `.mjs`.
 - `no-restricted-files` permits documentation only in `docs/`, `.github/`, and the root `README.md`, `README_zh.md`, `AGENTS.md` and `LICENSE`. Keep temporary explanations, plans and reports under ignored `.tmp/`; do not add them to the root or source directories.
