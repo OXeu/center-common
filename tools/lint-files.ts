@@ -9,6 +9,7 @@ import { paragraphRules } from '../config/markdown.ts'
 import { checkArchitecture } from './lint-architecture.ts'
 import { checkButtons } from './lint-buttons.ts'
 import { checkDialogs } from './lint-dialogs.ts'
+import { checkModuleSources } from './lint-modules.ts'
 
 export function checkFiles(root: string): string[] {
   const files = execFileSync(
@@ -59,6 +60,7 @@ export function checkFiles(root: string): string[] {
     ...checkArchitecture(root, files),
     ...checkButtons(root, files),
     ...checkDialogs(root, files),
+    ...checkModuleSources(root, files),
   ]
 }
 
