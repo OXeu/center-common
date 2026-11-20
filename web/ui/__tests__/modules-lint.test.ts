@@ -99,4 +99,30 @@ describe('Remote module enforcement', () => {
     write('client.go', 'package configcenter\n')
     expect(checkModuleSources(root, ['go.mod', 'client.go'])).toEqual([])
   })
+
+  it('allows the publishing repository to keep and require its nested module', () => {
+    write(
+      'go.mod',
+      `module github.com/OXeu/configcenter\n\nrequire github.com/OXeu/configcenter/sdk/configcenter v0.0.0\n\nreplace github.com/OXeu/configcenter/sdk/configcenter => ./sdk/configcenter\n`,
+    )
+    write('sdk/configcenter/go.mod', 'module github.com/OXeu/configcenter/sdk/configcenter\n')
+    write('sdk/configcenter/client.go', 'package configcenter\n')
+    write('internal/store/source.go', 'package store\n')
+    expect(
+      checkModuleSources(root, [
+        'go.mod',
+        'sdk/configcenter/go.mod',
+        'sdk/configcenter/client.go',
+        'internal/store/source.go',
+      ]),
+    ).toEqual([])
+  })
+
+  it('still rejects a hosted copy outside the publishing tree', () => {
+    write('go.mod', 'module github.com/OXeu/app\n')
+    write('internal/configcenter/client.go', 'package configcenter\n')
+    expect(checkModuleSources(root, ['go.mod', 'internal/configcenter/client.go'])).toContainEqual(
+      expect.stringContaining('require-remote-modules'),
+    )
+  })
 })

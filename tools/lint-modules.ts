@@ -67,11 +67,18 @@ export function checkModuleSources(root: string, files: string[]): string[] {
   const modPath = resolve(root, 'go.mod')
   if (!existsSync(modPath)) return errors
   const module = parseGoMod(readFileSync(modPath, 'utf8'))
+  // The repository that publishes an owned module keeps it in tree by design.
+  const hosted = ownedModules.filter(
+    (owned) => owned === module.module || owned.startsWith(`${module.module}/`),
+  )
+  const isHosted = (target: string) => hosted.some((owned) => owned === target)
+  const hostedDirs = hosted.map((owned) => owned.slice(module.module.length + 1)).filter(Boolean)
 
   const bootstrapped = existsSync(resolve(root, 'common.lock.json'))
   for (const replacement of module.replaces) {
     if (!(ownedModules as readonly string[]).includes(replacement.path)) continue
     if (!localTarget.test(replacement.target)) continue
+    if (isHosted(replacement.path)) continue
     const normalized = replacement.target.replace(/^\.\//u, '')
     if (bootstrapped && normalized === '.tmp/common') continue
     errors.push(
@@ -85,6 +92,7 @@ export function checkModuleSources(root: string, files: string[]): string[] {
     if (!existsSync(path)) continue
     const nested = parseGoMod(readFileSync(path, 'utf8')).module
     if (!(ownedModules as readonly string[]).includes(nested)) continue
+    if (isHosted(nested)) continue
     errors.push(
       `${file}: require-remote-modules: remove this copy of ${nested} and require the published module`,
     )
@@ -93,6 +101,9 @@ export function checkModuleSources(root: string, files: string[]): string[] {
   for (const file of files) {
     if (!/\.go$/u.test(file) || !existsSync(resolve(root, file))) continue
     const parts = dirname(file).split('/')
+    if (hostedDirs.some((dir) => dirname(file) === dir || dirname(file).startsWith(`${dir}/`))) {
+      continue
+    }
     for (const name of parts) {
       if (name === '.' || name === module.module) continue
       if (parts.at(-1) === 'cmd' && name === file.split('/')[1]) continue
