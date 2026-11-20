@@ -7,10 +7,23 @@ export function checkDangerTemplate(
   options: { button?: boolean; accountSignOut?: boolean } = {},
 ): string[] {
   const errors: string[] = []
-  const trusted =
-    filename ===
-    (options.button ? 'web/ui/src/DangerActionButton.vue' : 'web/ui/src/DangerActions.vue')
-  const dropdown = filename === 'web/ui/src/DropdownMenu.vue'
+  const normalized = filename.replaceAll('\\', '/')
+  const isActionButtonFile =
+    normalized === 'ui/DangerActionButton.vue' ||
+    normalized.endsWith('/ui/DangerActionButton.vue') ||
+    normalized === 'web/ui/src/DangerActionButton.vue' ||
+    normalized.endsWith('/web/ui/src/DangerActionButton.vue')
+  const isActionsFile =
+    normalized === 'ui/DangerActions.vue' ||
+    normalized.endsWith('/ui/DangerActions.vue') ||
+    normalized === 'web/ui/src/DangerActions.vue' ||
+    normalized.endsWith('/web/ui/src/DangerActions.vue')
+  const trusted = options.button ? isActionButtonFile : isActionButtonFile || isActionsFile
+  const dropdown =
+    normalized === 'ui/DropdownMenu.vue' ||
+    normalized.endsWith('/ui/DropdownMenu.vue') ||
+    normalized === 'web/ui/src/DropdownMenu.vue' ||
+    normalized.endsWith('/web/ui/src/DropdownMenu.vue')
   const words =
     /删除|撤销|吊销|拒绝|批准|清空|销毁|退出登录|登出|注销|封禁|解封|\b(delete|remove|revoke|reject|approve|review|destroy|purge|ban|unban|(?:log|sign)[\s_-]*(?:out|off))\b|common\.delete|nav\.signOut|users\.(ban|unban|delete)|projects\.(revoke|approve|reject)/iu
   function walk(node: any, inDropdown = false) {
@@ -48,7 +61,8 @@ export function checkDangerTemplate(
         attrs['data-danger-action'] === 'signOut'
       if (dangerous && !trusted && !accountSignOut) errors.push('danger-use-shared-actions')
       if (dangerous && (trusted || accountSignOut)) {
-        if (!options.button && !inDropdown) errors.push('danger-requires-dropdown')
+        if (!options.button && !isActionButtonFile && !inDropdown)
+          errors.push('danger-requires-dropdown')
         if (attrs.variant !== 'danger' && !attrs.class?.split(/\s/u).includes('btn-danger'))
           errors.push('danger-requires-style')
         if (

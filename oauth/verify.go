@@ -5,14 +5,21 @@ import (
 	"crypto"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"strings"
 	"time"
 )
+
+const keyRefreshCooldown = 10 * time.Second
+
+var errUnknownSigningKey = errors.New("unknown signing key")
 
 type jwk struct {
 	KID string `json:"kid"`
@@ -27,15 +34,24 @@ type keySet struct {
 	keys map[string]*rsa.PublicKey
 }
 
+func (c *Client) canRefreshKeys() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.keysLoaded.IsZero() || c.now().Sub(c.keysLoaded) >= keyRefreshCooldown
+}
+
 func (c *Client) keySets(ctx context.Context) (map[string]*rsa.PublicKey, error) {
 	c.mu.RLock()
-	if c.keys != nil && c.now().Sub(c.loaded) < time.Hour {
+	if c.keys != nil && !c.keysLoaded.IsZero() && c.now().Sub(c.keysLoaded) < time.Hour {
 		keys := c.keys.keys
 		c.mu.RUnlock()
 		return keys, nil
 	}
 	c.mu.RUnlock()
+	return c.refreshKeySets(ctx)
+}
 
+func (c *Client) refreshKeySets(ctx context.Context) (map[string]*rsa.PublicKey, error) {
 	meta, err := c.Metadata(ctx)
 	if err != nil {
 		return nil, err
@@ -58,12 +74,12 @@ func (c *Client) keySets(ctx context.Context) (map[string]*rsa.PublicKey, error)
 	var body struct {
 		Keys []jwk `json:"keys"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, maxDiscoveryBytes)).Decode(&body); err != nil {
 		return nil, fmt.Errorf("decode jwks: %w", err)
 	}
 	set := &keySet{keys: make(map[string]*rsa.PublicKey, len(body.Keys))}
 	for _, k := range body.Keys {
-		if k.Kty != "RSA" || (k.Alg != "" && k.Alg != "RS256") {
+		if k.Kty != "RSA" || (k.Alg != "" && !supportedRSAAlg(k.Alg)) {
 			continue
 		}
 		n, err := base64.RawURLEncoding.DecodeString(k.N)
@@ -78,8 +94,18 @@ func (c *Client) keySets(ctx context.Context) (map[string]*rsa.PublicKey, error)
 	}
 	c.mu.Lock()
 	c.keys = set
+	c.keysLoaded = c.now()
 	c.mu.Unlock()
 	return set.keys, nil
+}
+
+func supportedRSAAlg(alg string) bool {
+	switch alg {
+	case "RS256", "RS384", "RS512":
+		return true
+	default:
+		return false
+	}
 }
 
 func verifyIDToken(raw, issuer, clientID, nonce, groupsClaim string, keys map[string]*rsa.PublicKey, now time.Time) (Claims, error) {
@@ -95,18 +121,18 @@ func verifyIDToken(raw, issuer, clientID, nonce, groupsClaim string, keys map[st
 		Alg string `json:"alg"`
 		Kid string `json:"kid"`
 	}
-	if err := json.Unmarshal(headerJSON, &header); err != nil || header.Alg != "RS256" {
+	if err := json.Unmarshal(headerJSON, &header); err != nil || !supportedRSAAlg(header.Alg) {
 		return Claims{}, fmt.Errorf("%w: unsupported algorithm", ErrInvalidToken)
 	}
 	n, ok := keys[header.Kid]
 	if !ok {
-		return Claims{}, fmt.Errorf("%w: unknown signing key", ErrInvalidToken)
+		return Claims{}, fmt.Errorf("%w: %w", ErrInvalidToken, errUnknownSigningKey)
 	}
 	sig, err := base64.RawURLEncoding.DecodeString(parts[2])
 	if err != nil {
 		return Claims{}, fmt.Errorf("%w: signature is not base64url", ErrInvalidToken)
 	}
-	if !verifyRS256([]byte(parts[0]+"."+parts[1]), sig, n) {
+	if !verifyRSASignature(header.Alg, []byte(parts[0]+"."+parts[1]), sig, n) {
 		return Claims{}, fmt.Errorf("%w: bad signature", ErrInvalidToken)
 	}
 
@@ -210,7 +236,18 @@ func parseStringList(raw json.RawMessage) ([]string, error) {
 	return many, nil
 }
 
-func verifyRS256(signingInput, sig []byte, key *rsa.PublicKey) bool {
-	digest := sha256.Sum256(signingInput)
-	return rsa.VerifyPKCS1v15(key, crypto.SHA256, digest[:], sig) == nil
+func verifyRSASignature(alg string, signingInput, sig []byte, key *rsa.PublicKey) bool {
+	switch alg {
+	case "RS256":
+		digest := sha256.Sum256(signingInput)
+		return rsa.VerifyPKCS1v15(key, crypto.SHA256, digest[:], sig) == nil
+	case "RS384":
+		digest := sha512.Sum384(signingInput)
+		return rsa.VerifyPKCS1v15(key, crypto.SHA384, digest[:], sig) == nil
+	case "RS512":
+		digest := sha512.Sum512(signingInput)
+		return rsa.VerifyPKCS1v15(key, crypto.SHA512, digest[:], sig) == nil
+	default:
+		return false
+	}
 }

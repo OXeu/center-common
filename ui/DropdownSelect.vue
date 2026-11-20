@@ -64,6 +64,7 @@ function keydown(event: KeyboardEvent) {
     event.preventDefault()
     event.stopPropagation()
     close()
+    trigger.value?.focus()
     return
   }
   if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter', ' '].includes(key)) {

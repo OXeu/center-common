@@ -54,13 +54,14 @@ type Config struct {
 
 // Client is an OAuth 2.0 authorization-code + PKCE client for any OIDC issuer.
 type Client struct {
-	cfg    Config
-	http   *http.Client
-	now    func() time.Time
-	mu     sync.RWMutex
-	meta   *Discovery
-	keys   *keySet
-	loaded time.Time
+	cfg        Config
+	http       *http.Client
+	now        func() time.Time
+	mu         sync.RWMutex
+	meta       *Discovery
+	keys       *keySet
+	loaded     time.Time
+	keysLoaded time.Time
 }
 
 // New builds a client. Metadata is fetched lazily on first use and refetched
@@ -73,6 +74,13 @@ func New(cfg Config, httpClient *http.Client) *Client {
 		cfg.GroupsClaim = "groups"
 	}
 	return &Client{cfg: cfg, http: httpClient, now: func() time.Time { return time.Now().UTC() }}
+}
+
+// SetClock overrides the time source used for cache expiry and token verification.
+func (c *Client) SetClock(now func() time.Time) {
+	if now != nil {
+		c.now = now
+	}
 }
 
 // Issuer exposes the configured issuer URL.
@@ -192,6 +200,11 @@ func (c *Client) exchange(ctx context.Context, code, state, stateBlob string) (C
 		return Claims{}, err
 	}
 	claims, err := verifyIDToken(raw, c.cfg.IssuerURL, c.cfg.ClientID, sc.Nonce, c.cfg.GroupsClaim, sets, c.now())
+	if errors.Is(err, errUnknownSigningKey) && c.canRefreshKeys() {
+		if refreshed, refreshErr := c.refreshKeySets(ctx); refreshErr == nil {
+			claims, err = verifyIDToken(raw, c.cfg.IssuerURL, c.cfg.ClientID, sc.Nonce, c.cfg.GroupsClaim, refreshed, c.now())
+		}
+	}
 	if err != nil {
 		return Claims{}, err
 	}

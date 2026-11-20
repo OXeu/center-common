@@ -6,10 +6,16 @@ Center Common supplies shared infrastructure for ConfigCenter, AuthCenter and Ce
 
 | Directory          | Responsibility                                                                               |
 | ------------------ | -------------------------------------------------------------------------------------------- |
+| `apikey/`          | API key generation, prefix validation, SHA-256 hashing, display masking and header parsing   |
+| `httpassets/`      | Embedded static resources, gzip negotiation, strong ETag caching and range requests          |
+| `httpdocs/`        | Pre-rendered documentation serving, language negotiation, Markdown raw responses and styles  |
+| `httpsession/`     | Session token generation, constant-time CSRF verification, cookie helpers and expiry sweeps  |
+| `httpui/`          | Client-navigation detection and JSON page payload responses                                  |
+| `i18n/`            | Embedded locale catalog loading, message interpolation and `Accept-Language` resolution      |
 | `oauth/`           | OAuth 2.0, OIDC, PKCE, discovery, token verification, user information and GitHub adaptation |
-| `httpassets/`      | Embedded static resources, gzip negotiation and range requests                               |
-| `ui/`              | CheckboxField, DropdownMenu, DropdownSelect, positioning and theme tokens                    |
-| `tools/`           | Vite configuration, development proxy, assets, lint and toolchain checks                     |
+| `slug/`            | Resource slug and configuration key validation                                               |
+| `ui/`              | Shared Vue components, client navigation, toast/dialog hosts, API/i18n helpers and theme CSS |
+| `tools/`           | Vite configuration, development proxy, assets, lint rules and toolchain checks               |
 | `config/`          | Go lint settings and consumer Make targets                                                   |
 | `.github/actions/` | Shared setup, checks and build workflows                                                     |
 

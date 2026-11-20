@@ -4,14 +4,20 @@
 
 configcenter、authcenter 和 certcenter 长期共同维护的基础设施仓库。三个业务仓库保持独立的 Git 历史、数据模型、权限、页面和部署周期；共享实现通过依赖引用，不复制到业务仓库。
 
-| 目录               | 共享能力                                                                    |
-| ------------------ | --------------------------------------------------------------------------- |
-| `oauth/`           | OAuth 2.0 / OIDC、PKCE、发现、签名验证、用户信息和 GitHub 适配              |
-| `httpassets/`      | 嵌入式静态资源、gzip 协商、范围请求                                         |
-| `ui/`              | CheckboxField、DropdownMenu、DropdownSelect、定位、主题、设计变量和公共样式 |
-| `tools/`           | Vite/Vue/Tailwind 工厂、开发代理、图标、压缩、共享 lint 和工具链版本检查    |
-| `config/`          | Go lint/format 和业务仓库的 Make 构建入口                                   |
-| `.github/actions/` | 可复用的安装与完整检查流水线                                                |
+| 目录               | 共享能力                                                                     |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `apikey/`          | API 密钥生成、前缀校验、SHA-256 哈希、脱敏展示前缀及请求头解析               |
+| `httpassets/`      | 嵌入式静态资源、gzip 协商、强 ETag 缓存协商与范围请求                        |
+| `httpdocs/`        | 预渲染文档路由挂载、语言协商、Markdown 原文响应与代码高亮样式                |
+| `httpsession/`     | 会话随机令牌生成、常量时间 CSRF 校验、Cookie 读写与过期会话清理              |
+| `httpui/`          | 客户端导航请求识别与 JSON 页面快照响应                                       |
+| `i18n/`            | 嵌入式多语言词典加载、模板变量插值与 `Accept-Language` 解析                  |
+| `oauth/`           | OAuth 2.0 / OIDC、PKCE、发现、签名验证、用户信息和 GitHub 适配               |
+| `slug/`            | 资源标识符（Slug）与配置键名格式校验                                         |
+| `ui/`              | 共享 Vue 控件、客户端导航、通知与弹窗宿主、API/多语言/错误辅助函数及公共样式 |
+| `tools/`           | Vite/Vue/Tailwind 工厂、开发代理、图标、压缩、共享 lint 规则与工具链版本检查 |
+| `config/`          | Go lint/format 和业务仓库的 Make 构建入口                                    |
+| `.github/actions/` | 可复用的安装与完整检查流水线                                                 |
 
 业务配置通过参数传入。业务表单、DialogPanel 中的具体字段、权限、危险操作注册、翻译目录、通知宿主和部署凭据仍由各项目管理。OAuth 的 GitHub 邮箱验证策略是显式参数，保留各项目原有行为。
 

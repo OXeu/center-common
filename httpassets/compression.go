@@ -2,6 +2,8 @@ package httpassets
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"io/fs"
 	"net/http"
 	"path"
@@ -43,37 +45,68 @@ func AcceptsGzip(value string) bool {
 // ServeFile serves embedded assets with negotiated precompressed responses.
 func ServeFile(c *gin.Context, filesystem fs.FS, name string) {
 	contentType := ""
+	compressible := false
 	switch path.Ext(name) {
-	case ".js":
+	case ".js", ".mjs":
 		contentType = "text/javascript; charset=utf-8"
+		compressible = true
 	case ".css":
 		contentType = "text/css; charset=utf-8"
+		compressible = true
 	case ".svg":
 		contentType = "image/svg+xml"
-	case ".json":
+		compressible = true
+	case ".json", ".map":
 		contentType = "application/json"
+		compressible = true
+	case ".html":
+		contentType = "text/html; charset=utf-8"
+		compressible = true
+	case ".txt", ".md":
+		contentType = "text/plain; charset=utf-8"
+		compressible = true
+	case ".webp":
+		contentType = "image/webp"
+	case ".png":
+		contentType = "image/png"
+	case ".ico":
+		contentType = "image/x-icon"
+	case ".woff2":
+		contentType = "font/woff2"
 	}
-	filename := name
-	compressed := false
-	if contentType != "" {
+	var (
+		data       []byte
+		err        error
+		compressed bool
+	)
+	if compressible {
 		c.Writer.Header().Add("Vary", "Accept-Encoding")
-		compressed = AcceptsGzip(c.GetHeader("Accept-Encoding")) && c.GetHeader("Range") == ""
-		if compressed {
-			filename += ".gz"
+		if AcceptsGzip(c.GetHeader("Accept-Encoding")) && c.GetHeader("Range") == "" {
+			if gzData, gzErr := fs.ReadFile(filesystem, name+".gz"); gzErr == nil {
+				data = gzData
+				compressed = true
+			}
 		}
 	}
-	data, err := fs.ReadFile(filesystem, filename)
-	if err != nil {
-		c.Header("Cache-Control", "no-store")
-		c.Status(http.StatusNotFound)
-		return
+	if !compressed {
+		data, err = fs.ReadFile(filesystem, name)
+		if err != nil {
+			c.Header("Cache-Control", "no-store")
+			c.Status(http.StatusNotFound)
+			return
+		}
 	}
 	if contentType == "" {
 		contentType = http.DetectContentType(data)
 	}
 	c.Header("Content-Type", contentType)
+	sum := sha256.Sum256(data)
+	suffix := ""
 	if compressed {
 		c.Header("Content-Encoding", "gzip")
+		suffix = "-gzip"
 	}
+	c.Header("ETag", `"`+hex.EncodeToString(sum[:8])+suffix+`"`)
 	http.ServeContent(c.Writer, c.Request, name, time.Time{}, bytes.NewReader(data))
+	c.Writer.WriteHeaderNow()
 }

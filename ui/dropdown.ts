@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref, watch, type Ref, type CSSProperties } from 'vue'
+import { ref, watch, type Ref, type CSSProperties } from 'vue'
 
 export function useDropdownPosition(
   trigger: Ref<HTMLElement | null>,
@@ -28,14 +28,19 @@ export function useDropdownPosition(
       maxHeight: `${maxHeight}px`,
     }
   }
-  watch(open, update, { flush: 'post' })
-  onMounted(() => {
-    window.addEventListener('resize', update)
-    window.addEventListener('scroll', update, true)
-  })
-  onUnmounted(() => {
-    window.removeEventListener('resize', update)
-    window.removeEventListener('scroll', update, true)
-  })
+  watch(
+    open,
+    (isOpen, _, onCleanup) => {
+      if (!isOpen) return
+      update()
+      window.addEventListener('resize', update)
+      window.addEventListener('scroll', update, true)
+      onCleanup(() => {
+        window.removeEventListener('resize', update)
+        window.removeEventListener('scroll', update, true)
+      })
+    },
+    { flush: 'post' },
+  )
   return position
 }

@@ -2,12 +2,20 @@ package oauth
 
 import (
 	"context"
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestFinishReportsTokenResponseErrors(t *testing.T) {
@@ -157,5 +165,91 @@ func TestTokenExchangeAuthentication(t *testing.T) {
 				t.Fatalf("token exchange: id=%q access=%q error=%v", id, access, err)
 			}
 		})
+	}
+}
+
+func TestJWKSKeyRotationAndRS384Verification(t *testing.T) {
+	t.Parallel()
+	oldKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("generate old key: %v", err)
+	}
+	newKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("generate new key: %v", err)
+	}
+	now := time.Date(2026, 4, 1, 12, 0, 0, 0, time.UTC)
+	var rotated atomic.Bool
+	var jwksHits atomic.Int32
+	var srvURL string
+
+	encodeJWK := func(kid string, pub *rsa.PublicKey) map[string]string {
+		return map[string]string{
+			"kid": kid,
+			"kty": "RSA",
+			"alg": "RS384",
+			"use": "sig",
+			"n":   base64.RawURLEncoding.EncodeToString(pub.N.Bytes()),
+			"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(pub.E)).Bytes()),
+		}
+	}
+
+	signRS384 := func(kid string, key *rsa.PrivateKey) string {
+		header, _ := json.Marshal(map[string]string{"alg": "RS384", "kid": kid})
+		payload, _ := json.Marshal(map[string]any{
+			"iss":   srvURL,
+			"sub":   "user-1",
+			"aud":   "client-1",
+			"exp":   now.Add(10 * time.Minute).Unix(),
+			"iat":   now.Unix(),
+			"nonce": "nonce-1",
+			"email": "user@example.com",
+		})
+		signingInput := base64.RawURLEncoding.EncodeToString(header) + "." + base64.RawURLEncoding.EncodeToString(payload)
+		digest := sha512.Sum384([]byte(signingInput))
+		sig, signErr := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA384, digest[:])
+		if signErr != nil {
+			t.Fatalf("sign token: %v", signErr)
+		}
+		return signingInput + "." + base64.RawURLEncoding.EncodeToString(sig)
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/jwks", func(w http.ResponseWriter, _ *http.Request) {
+		jwksHits.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		if rotated.Load() {
+			_ = json.NewEncoder(w).Encode(map[string]any{"keys": []any{encodeJWK("k2", &newKey.PublicKey)}})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(map[string]any{"keys": []any{encodeJWK("k1", &oldKey.PublicKey)}})
+	})
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		tok := signRS384("k2", newKey)
+		_ = json.NewEncoder(w).Encode(map[string]any{"access_token": "acc", "token_type": "Bearer", "id_token": tok})
+	})
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+	srvURL = srv.URL
+
+	c := New(Config{IssuerURL: srv.URL, ClientID: "client-1", ClientSecret: "secret-1"}, srv.Client())
+	c.SetClock(func() time.Time { return now })
+	c.remember(Discovery{Issuer: srv.URL, TokenEndpoint: srv.URL + "/token", JWKSURI: srv.URL + "/jwks"})
+
+	if _, err := c.keySets(t.Context()); err != nil {
+		t.Fatalf("prime keySets: %v", err)
+	}
+	rotated.Store(true)
+	now = now.Add(15 * time.Second)
+
+	blob, _ := json.Marshal(stateCookie{State: "st", Verifier: "ver", Nonce: "nonce-1"})
+	stateBlob, _ := encodeState(blob)
+	claims, err := c.Finish(t.Context(), "code", "st", stateBlob)
+	if err != nil {
+		t.Fatalf("Finish() after key rotation failed: %v", err)
+	}
+	if claims.Sub != "user-1" || jwksHits.Load() != 2 {
+		t.Fatalf("claims=%+v jwksHits=%d, want sub=user-1 and 2 jwks fetches", claims, jwksHits.Load())
 	}
 }

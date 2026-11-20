@@ -2,6 +2,17 @@ import { parse } from '@vue/compiler-dom'
 import { overridesDropdownPosition } from './dropdown.ts'
 import { checkDialogTemplate } from './dialog-template.ts'
 
+function isSharedComponent(filename: string, ...names: string[]): boolean {
+  const normalized = filename.replaceAll('\\', '/')
+  return names.some(
+    (name) =>
+      normalized === `ui/${name}` ||
+      normalized.endsWith(`/ui/${name}`) ||
+      normalized === `web/ui/src/${name}` ||
+      normalized.endsWith(`/web/ui/src/${name}`),
+  )
+}
+
 export function checkTemplate(
   source: string,
   filename = '',
@@ -54,7 +65,7 @@ export function checkTemplate(
           spread)
       )
         errors.push('no-native-checkbox: use CheckboxField instead')
-      if (attrs.role === 'checkbox' && filename !== 'web/ui/src/CheckboxField.vue')
+      if (attrs.role === 'checkbox' && !isSharedComponent(filename, 'CheckboxField.vue'))
         errors.push('checkbox-use-shared-component')
       const classes = (attrs.class ?? '').split(/\s+/u)
       field ||= dialog && classes.includes('field')
@@ -69,7 +80,7 @@ export function checkTemplate(
           ['dropdown-panel', 'dropdown-content', 'dropdown-options'].includes(name),
         ) || ['listbox', 'menu'].includes(attrs.role)
       if (panel) {
-        if (!['web/ui/src/DropdownMenu.vue', 'web/ui/src/DropdownSelect.vue'].includes(filename))
+        if (!isSharedComponent(filename, 'DropdownMenu.vue', 'DropdownSelect.vue'))
           errors.push('dropdown-use-shared-component')
         if (!classes.includes('dropdown-panel')) errors.push('dropdown-requires-overlay')
         if (
@@ -95,7 +106,7 @@ export function checkTemplate(
       if (attrs['aria-live'] && attrs['aria-live'] !== 'off') errors.push('inline-message')
       if (
         ['alert', 'status', 'log', 'tooltip'].includes(attrs.role) &&
-        filename !== 'web/ui/src/ToastViewport.vue'
+        !isSharedComponent(filename, 'ToastViewport.vue')
       )
         errors.push('inline-message')
       if (

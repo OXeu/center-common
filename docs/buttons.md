@@ -6,16 +6,16 @@ All action buttons and styled navigation links use `@oxeu/center-common/ui/Butto
 
 ## Options / 选项
 
-| Prop | Values | Default |
-| --- | --- | --- |
-| `size` | `sm`, `normal`, `lg`, `xl` | `normal` |
-| `variant` | `primary`, `secondary`, `ghost`, `danger`, `forbidden` | `primary` |
-| `content` | `text`, `icon-text`, `icon` | `text` |
-| `type` | `button`, `submit`, `reset` | `button` |
-| `align` | `center`, `start` | `center` |
-| `block` | Boolean, full width / 占满宽度 | `false` |
-| `disabled` | Boolean, temporarily unavailable / 暂时不可用 | `false` |
-| `href` | Navigation destination / 导航地址 | absent / 无 |
+| Prop       | Values                                                 | Default     |
+| ---------- | ------------------------------------------------------ | ----------- |
+| `size`     | `sm`, `normal`, `lg`, `xl`                             | `normal`    |
+| `variant`  | `primary`, `secondary`, `ghost`, `danger`, `forbidden` | `primary`   |
+| `content`  | `text`, `icon-text`, `icon`                            | `text`      |
+| `type`     | `button`, `submit`, `reset`                            | `button`    |
+| `align`    | `center`, `start`                                      | `center`    |
+| `block`    | Boolean, full width / 占满宽度                         | `false`     |
+| `disabled` | Boolean, temporarily unavailable / 暂时不可用          | `false`     |
+| `href`     | Navigation destination / 导航地址                      | absent / 无 |
 
 - Desktop minimum heights are **32 / 36 / 44 / 52 px**, respectively.
 - Below 640 px, buttons retain a minimum 44 px touch target; larger sizes remain larger.
