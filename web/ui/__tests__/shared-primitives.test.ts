@@ -19,6 +19,8 @@ import { checkFormFeedback, formFeedback } from '../../../tools/oxlint/form-feed
 import DangerActions from '../../../ui/DangerActions.vue'
 import ToastViewport from '../../../ui/ToastViewport.vue'
 import ModalDialog from '../../../ui/ModalDialog.vue'
+import AuthCard from '../../../ui/AuthCard.vue'
+import ConsentCard from '../../../ui/ConsentCard.vue'
 
 afterEach(() => {
   document.body.replaceChildren()
@@ -168,5 +170,44 @@ describe('shared UI helpers and components', () => {
 
     expect(checkFormFeedback('<p>{{ form.error }}</p>')).toEqual(['form-feedback-requires-toast'])
     expect(formFeedback('const saveError = ref("")')('saveError', false)).toBe(true)
+
+    const authCard = mount(AuthCard, {
+      props: {
+        title: 'AuthCenter',
+        subtitle: 'Sign in with OAuth',
+        oauthHref: '/auth/login',
+        oauthLabel: 'Continue with GitHub',
+      },
+      global: { plugins: [pinia] },
+    })
+    expect(authCard.get('a').attributes('href')).toBe('/auth/login')
+    expect(authCard.text()).toContain('AuthCenter')
+    expect(authCard.text()).toContain('Sign in with OAuth')
+    authCard.unmount()
+
+    const allowed: boolean[] = []
+    const consentCard = mount(ConsentCard, {
+      props: {
+        title: 'ConfigCenter',
+        subtitle: 'https://config.example.com',
+        description: 'This application requests access to:',
+        scopes: ['OpenID identity', 'Email address'],
+        details: [{ label: 'Callback', value: 'https://config.example.com/callback' }],
+        allowLabel: 'Allow',
+        denyLabel: 'Deny',
+        denyFirst: true,
+        onAllow: () => allowed.push(true),
+        onDeny: () => allowed.push(false),
+      },
+      global: { plugins: [pinia] },
+    })
+    expect(consentCard.find('img').exists()).toBe(false)
+    const buttons = consentCard.findAll('button')
+    expect(buttons[0]!.text()).toBe('Deny')
+    expect(buttons[1]!.text()).toBe('Allow')
+    await buttons[0]!.trigger('click')
+    await buttons[1]!.trigger('click')
+    expect(allowed).toEqual([false, true])
+    consentCard.unmount()
   })
 })

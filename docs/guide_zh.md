@@ -14,7 +14,7 @@ configcenter、authcenter 和 certcenter 长期共同维护的基础设施仓库
 | `i18n/`            | 嵌入式多语言词典加载、模板变量插值与 `Accept-Language` 解析                  |
 | `oauth/`           | OAuth 2.0 / OIDC、PKCE、发现、签名验证、用户信息和 GitHub 适配               |
 | `slug/`            | 资源标识符（Slug）与配置键名格式校验                                         |
-| `ui/`              | 共享 Vue 控件、客户端导航、通知与弹窗宿主、API/多语言/错误辅助函数及公共样式 |
+| `ui/`              | 共享 Vue 控件、登录与授权同意卡片、客户端导航、通知与弹窗宿主、辅助函数及公共样式 |
 | `tools/`           | Vite/Vue/Tailwind 工厂、开发代理、图标、压缩、共享 lint 规则与工具链版本检查 |
 | `config/`          | Go lint/format 和业务仓库的 Make 构建入口                                    |
 | `.github/actions/` | 可复用的安装与完整检查流水线                                                 |

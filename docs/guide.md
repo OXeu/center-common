@@ -14,7 +14,7 @@ Center Common supplies shared infrastructure for ConfigCenter, AuthCenter and Ce
 | `i18n/`            | Embedded locale catalog loading, message interpolation and `Accept-Language` resolution      |
 | `oauth/`           | OAuth 2.0, OIDC, PKCE, discovery, token verification, user information and GitHub adaptation |
 | `slug/`            | Resource slug and configuration key validation                                               |
-| `ui/`              | Shared Vue components, client navigation, toast/dialog hosts, API/i18n helpers and theme CSS |
+| `ui/`              | Shared Vue components, auth/consent cards, navigation, dialog/toast hosts, helpers and theme |
 | `tools/`           | Vite configuration, development proxy, assets, lint rules and toolchain checks               |
 | `config/`          | Go lint settings and consumer Make targets                                                   |
 | `.github/actions/` | Shared setup, checks and build workflows                                                     |

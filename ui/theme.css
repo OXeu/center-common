@@ -198,6 +198,78 @@
   .card {
     @apply rounded-lg border bg-card p-4 border-gray-200;
   }
+  .auth-stage {
+    @apply mt-6 flex justify-center sm:mt-10;
+  }
+  .auth-card {
+    position: relative;
+    @apply w-full max-w-md overflow-hidden rounded-lg border bg-card p-6 shadow-sm sm:p-7;
+  }
+  .auth-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      var(--color-primary),
+      color-mix(in oklab, var(--color-primary) 35%, transparent)
+    );
+  }
+  .consent-card {
+    @apply max-w-xl;
+  }
+  .auth-header {
+    @apply flex items-start gap-4;
+  }
+  .auth-emblem {
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border bg-muted text-xl text-foreground;
+  }
+  .consent-logo {
+    @apply h-12 w-12 shrink-0 rounded-lg border bg-muted object-cover p-0.5;
+  }
+  .auth-heading {
+    @apply min-w-0 flex-1 space-y-1;
+  }
+  .auth-title {
+    @apply break-words text-lg font-semibold leading-snug tracking-tight text-foreground;
+  }
+  .auth-subtitle {
+    @apply break-all text-sm leading-relaxed text-muted-foreground;
+  }
+  .auth-body {
+    @apply mt-5 space-y-4 border-t pt-4 text-sm leading-relaxed text-foreground;
+  }
+  .consent-description {
+    @apply text-sm leading-relaxed text-muted-foreground;
+  }
+  .consent-scope-list {
+    @apply space-y-2 rounded-md border bg-muted/40 p-3.5;
+  }
+  .consent-scope-item {
+    @apply flex items-start gap-2.5 text-sm leading-snug text-foreground;
+  }
+  .consent-scope-icon {
+    @apply mt-0.5 shrink-0 text-base text-foreground;
+  }
+  .consent-meta {
+    @apply divide-y rounded-md border bg-muted/30 text-sm;
+  }
+  .consent-meta-row {
+    @apply flex flex-col gap-1 px-3.5 py-2.5 sm:grid sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:items-baseline sm:gap-3;
+  }
+  .consent-meta-label {
+    @apply text-xs font-medium text-muted-foreground;
+  }
+  .consent-meta-value {
+    @apply break-all font-mono text-xs text-foreground sm:text-sm;
+  }
+  .auth-actions {
+    @apply mt-6 flex flex-wrap items-center gap-2.5 border-t pt-5;
+  }
+  .auth-actions:empty {
+    display: none;
+  }
   .field {
     @apply flex flex-col gap-2 text-sm text-muted-foreground;
   }
