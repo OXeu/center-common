@@ -42,29 +42,27 @@ const hasDetails = computed(() => props.details.length > 0)
 </script>
 <template>
   <div class="auth-stage">
-    <section class="card auth-card consent-card" :aria-label="title">
-      <div class="auth-header">
+    <section class="auth-card consent-card" :aria-label="title">
+      <header class="auth-head">
         <img
           v-if="logoSrc"
           :src="logoSrc"
           alt=""
-          width="48"
-          height="48"
+          width="56"
+          height="56"
           class="consent-logo"
         />
         <div v-else class="auth-emblem" aria-hidden="true">
           <i :class="icon" aria-hidden="true"></i>
         </div>
-        <div class="auth-heading">
-          <h2 class="auth-title">{{ title }}</h2>
-          <p v-if="subtitle" class="auth-subtitle">{{ subtitle }}</p>
-        </div>
-      </div>
+        <h2 class="auth-title">{{ title }}</h2>
+        <p v-if="subtitle" class="auth-subtitle">{{ subtitle }}</p>
+        <p class="auth-subtitle">{{ description }}</p>
+      </header>
       <div class="auth-body">
-        <p class="consent-description">{{ description }}</p>
         <ul v-if="hasScopes" class="consent-scope-list">
           <li v-for="scope in scopes" :key="scope" class="consent-scope-item">
-            <i class="ri-shield-check-line consent-scope-icon" aria-hidden="true"></i>
+            <i class="ri-check-line consent-scope-icon" aria-hidden="true"></i>
             <span>{{ scope }}</span>
           </li>
         </ul>
@@ -74,21 +72,22 @@ const hasDetails = computed(() => props.details.length > 0)
             <dd class="consent-meta-value">{{ item.value }}</dd>
           </div>
         </dl>
+        <slot name="body" />
       </div>
-      <div class="auth-actions">
+      <div class="auth-actions auth-actions-row">
         <template v-if="denyFirst">
-          <Button type="button" :disabled="busy" @click="emit('deny')" variant="secondary">
+          <Button type="button" :disabled="busy" @click="emit('deny')" variant="secondary" size="lg">
             {{ denyLabel }}
           </Button>
-          <Button type="button" :disabled="busy" @click="emit('allow')" variant="primary">
+          <Button type="button" :disabled="busy" @click="emit('allow')" size="lg">
             {{ allowLabel }}
           </Button>
         </template>
         <template v-else>
-          <Button type="button" :disabled="busy" @click="emit('allow')" variant="primary">
+          <Button type="button" :disabled="busy" @click="emit('allow')" size="lg">
             {{ allowLabel }}
           </Button>
-          <Button type="button" :disabled="busy" @click="emit('deny')" variant="secondary">
+          <Button type="button" :disabled="busy" @click="emit('deny')" variant="secondary" size="lg">
             {{ denyLabel }}
           </Button>
         </template>
